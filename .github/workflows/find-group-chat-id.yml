@@ -1,0 +1,72 @@
+name: Bale group chat ID diagnostic
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  find-chat-id:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Listen briefly for a group message
+        env:
+          BALE_BOT_TOKEN: ${{ secrets.BALE_BOT_TOKEN }}
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          import time
+          import urllib.request
+          import urllib.error
+
+          token = os.environ["BALE_BOT_TOKEN"].strip()
+          base = f"https://tapi.bale.ai/bot{token}"
+          offset = None
+          deadline = time.time() + 45
+          found = set()
+
+          print("Listening for Bale messages for up to 45 seconds...")
+          print("Send a new text message in the university group now.")
+
+          while time.time() < deadline:
+              params = {"timeout": 5}
+              if offset is not None:
+                  params["offset"] = offset
+              url = base + "/getUpdates?" + urllib.parse.urlencode(params)
+              try:
+                  with urllib.request.urlopen(url, timeout=10) as response:
+                      data = json.loads(response.read().decode("utf-8"))
+              except Exception as exc:
+                  print(f"Polling error: {type(exc).__name__}: {exc}")
+                  time.sleep(2)
+                  continue
+
+              if not data.get("ok"):
+                  print("Bale API returned ok=false.")
+                  time.sleep(2)
+                  continue
+
+              for update in data.get("result", []):
+                  offset = update["update_id"] + 1
+                  message = update.get("message") or update.get("edited_message") or {}
+                  chat = message.get("chat") or {}
+                  if not chat:
+                      continue
+                  chat_id = chat.get("id")
+                  chat_type = chat.get("type", "unknown")
+                  key = (chat_id, chat_type)
+                  if key not in found:
+                      found.add(key)
+                      print(f"CHAT FOUND | chat_id={chat_id} | chat_type={chat_type}")
+
+          if not found:
+              print("NO MESSAGE RECEIVED. Check that the bot is in the group, group privacy is disabled, and send a NEW text message.")
+          PY
