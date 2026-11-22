@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 
 import requests
+import jdatetime
 
 TOKEN = os.environ.get("BALE_BOT_TOKEN", "").strip()
 CHAT_ID = os.environ.get("BALE_CHAT_ID", "").strip()
@@ -61,7 +62,8 @@ def main():
 
     started_at = datetime.now(timezone.utc).timestamp()
     local_start = datetime.now(tz)
-    date_label = local_start.strftime("%Y-%m-%d")
+    jalali_date = jdatetime.date.fromgregorian(date=local_start.date())
+    date_label = jalali_date.strftime("%Y/%m/%d").translate(str.maketrans("0123456789", "۰۱۲۳۴۵۶۷۸۹"))
     deadline = time.monotonic() + WINDOW_MINUTES * 60
 
     send(
