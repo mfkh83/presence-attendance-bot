@@ -1,4 +1,4 @@
-name: Bale bot connection test
+name: Bale attendance test
 
 on:
   workflow_dispatch:
@@ -7,9 +7,9 @@ permissions:
   contents: read
 
 jobs:
-  test-bale-updates:
+  attendance-test:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 25
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -22,7 +22,10 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Listen for Bale group messages
+      - name: Run 15-minute attendance test
         env:
           BALE_BOT_TOKEN: ${{ secrets.BALE_BOT_TOKEN }}
+          BALE_CHAT_ID: "4493903011"
+          TIMEZONE: "Asia/Tehran"
+          ATTENDANCE_WINDOW_MINUTES: "15"
         run: python bot.py
