@@ -2,6 +2,16 @@ name: Bale attendance
 
 on:
   workflow_dispatch:
+    inputs:
+      window_minutes:
+        description: "مدت تست دستی (دقیقه)؛ اجرای خودکار پنجشنبه همیشه ۱۵ دقیقه است"
+        required: true
+        type: choice
+        options:
+          - "1"
+          - "2"
+          - "15"
+        default: "1"
   schedule:
     # Every Thursday at 10:00 Asia/Tehran (06:30 UTC)
     - cron: "30 6 * * 4"
@@ -25,10 +35,10 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Run 15-minute attendance session
+      - name: Run attendance session
         env:
           BALE_BOT_TOKEN: ${{ secrets.BALE_BOT_TOKEN }}
           BALE_CHAT_ID: "4477425950"
           TIMEZONE: "Asia/Tehran"
-          ATTENDANCE_WINDOW_MINUTES: "15"
+          ATTENDANCE_WINDOW_MINUTES: ${{ inputs.window_minutes || '15' }}
         run: python bot.py
