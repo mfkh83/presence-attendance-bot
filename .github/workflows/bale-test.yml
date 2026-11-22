@@ -1,13 +1,16 @@
-name: Bale attendance test
+name: Bale attendance
 
 on:
   workflow_dispatch:
+  schedule:
+    # Every Thursday at 10:00 Asia/Tehran (06:30 UTC)
+    - cron: "30 6 * * 4"
 
 permissions:
   contents: read
 
 jobs:
-  attendance-test:
+  attendance:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
@@ -22,10 +25,10 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Run 15-minute attendance test
+      - name: Run 15-minute attendance session
         env:
           BALE_BOT_TOKEN: ${{ secrets.BALE_BOT_TOKEN }}
-          BALE_CHAT_ID: "4493903011"
+          BALE_CHAT_ID: "4477425950"
           TIMEZONE: "Asia/Tehran"
           ATTENDANCE_WINDOW_MINUTES: "15"
         run: python bot.py
