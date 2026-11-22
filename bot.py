@@ -3,7 +3,8 @@ import sys
 import time
 import requests
 
-TOKEN = os.environ.get("BALE_BOT_TOKEN")
+# Remove accidental spaces/newlines when the token is pasted into GitHub Secrets.
+TOKEN = os.environ.get("BALE_BOT_TOKEN", "").strip()
 if not TOKEN:
     print("ERROR: BALE_BOT_TOKEN secret is missing.")
     sys.exit(1)
@@ -13,8 +14,8 @@ deadline = time.monotonic() + 180
 offset = None
 seen = set()
 
-print("Diagnostic started. Send a normal text message in the Bale group now.")
-print("The bot will listen for up to 3 minutes. Message text is never printed.")
+print("Diagnostic started. Send a normal text message in the Bale group now.", flush=True)
+print("The bot will listen for up to 3 minutes. Message text is never printed.", flush=True)
 
 while time.monotonic() < deadline:
     params = {"timeout": 10}
@@ -23,15 +24,18 @@ while time.monotonic() < deadline:
 
     try:
         response = requests.get(f"{BASE}/getUpdates", params=params, timeout=15)
+        if response.status_code == 401:
+            print("ERROR: Bale API rejected the token (HTTP 401). Check that the secret contains the exact current token, with no extra characters.", flush=True)
+            sys.exit(1)
         response.raise_for_status()
         payload = response.json()
-    except Exception as exc:
-        print(f"API request failed: {type(exc).__name__}: {exc}")
+    except requests.RequestException as exc:
+        print(f"API request failed: {type(exc).__name__}: {exc}", flush=True)
         time.sleep(3)
         continue
 
     if not payload.get("ok", False):
-        print("Bale API returned ok=false:", payload)
+        print("Bale API returned ok=false.", flush=True)
         time.sleep(3)
         continue
 
@@ -45,7 +49,7 @@ while time.monotonic() < deadline:
 
         message = update.get("message") or update.get("edited_message")
         if not message:
-            print("Received a non-message update.")
+            print("Received a non-message update.", flush=True)
             continue
 
         chat = message.get("chat", {})
@@ -56,7 +60,8 @@ while time.monotonic() < deadline:
             f"chat_id={chat.get('id')} | "
             f"chat_type={chat.get('type')} | "
             f"sender_id={sender.get('id')} | "
-            f"text_present={bool(text)}"
+            f"text_present={bool(text)}",
+            flush=True
         )
 
-print("Diagnostic finished.")
+print("Diagnostic finished.", flush=True)
