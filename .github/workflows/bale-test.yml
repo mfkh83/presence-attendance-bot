@@ -4,13 +4,13 @@ on:
   workflow_dispatch:
     inputs:
       window_minutes:
-        description: "مدت تست دستی (دقیقه)؛ اجرای خودکار پنجشنبه همیشه ۱۵ دقیقه است"
+        description: "مدت تست دستی (دقیقه)؛ اجرای خودکار پنجشنبه همیشه ۱۰ دقیقه است"
         required: true
         type: choice
         options:
           - "1"
           - "2"
-          - "15"
+          - "10"
         default: "1"
   schedule:
     # Every Thursday at 10:00 Asia/Tehran (06:30 UTC)
@@ -22,7 +22,7 @@ permissions:
 jobs:
   attendance:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 20
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -40,5 +40,5 @@ jobs:
           BALE_BOT_TOKEN: ${{ secrets.BALE_BOT_TOKEN }}
           BALE_CHAT_ID: "4477425950"
           TIMEZONE: "Asia/Tehran"
-          ATTENDANCE_WINDOW_MINUTES: ${{ inputs.window_minutes || '15' }}
+          ATTENDANCE_WINDOW_MINUTES: ${{ inputs.window_minutes || '10' }}
         run: python bot.py
